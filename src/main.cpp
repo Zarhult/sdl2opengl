@@ -37,7 +37,7 @@ int init(const char* title, unsigned int win_flags) {
 
     // Initialize OpenGL necessities (OpenGL 4.3)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     context = SDL_GL_CreateContext(sdl_window);
     // glewExperimental = GL_TRUE;
     glewInit();
@@ -92,34 +92,34 @@ int main() {
     glPointSize(30.0f);
     glDrawArrays(GL_POINTS, 0, 1);
 
-	bool isRunning = true;
-	SDL_Event sdl_event;
-	while (isRunning)
-	{
-		while (SDL_PollEvent(&sdl_event) != 0)
-		{
-			if (sdl_event.type == SDL_QUIT)
-			{
-				isRunning = false;
-			}
-			else if (sdl_event.type == SDL_KEYDOWN)
-			{
-				switch (sdl_event.key.keysym.sym)
-				{
-				case SDLK_ESCAPE:
-					isRunning = false;
-					break;
+    bool isRunning = true;
+    SDL_Event sdl_event;
+    while (isRunning)
+    {
+        while (SDL_PollEvent(&sdl_event) != 0)
+        {
+            if (sdl_event.type == SDL_QUIT)
+            {
+                isRunning = false;
+            }
+            else if (sdl_event.type == SDL_KEYDOWN)
+            {
+                switch (sdl_event.key.keysym.sym)
+                {
+                case SDLK_ESCAPE:
+                    isRunning = false;
+                    break;
                 }
-			}
+            }
 
-			SDL_GL_SwapWindow(sdl_window);
-		}
-	}
+            SDL_GL_SwapWindow(sdl_window);
+        }
+    }
 
-	// clean up
+    // clean up
     SDL_GL_DeleteContext(context);
-	SDL_DestroyWindow(sdl_window);
-	SDL_Quit();
+    SDL_DestroyWindow(sdl_window);
+    SDL_Quit();
 
-	return 0;
+    return 0;
 }
