@@ -1,9 +1,11 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_video.h>
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cstdlib>
 
 #define numVAOs 1
 SDL_Window* sdl_window = nullptr;
@@ -13,6 +15,12 @@ const int win_width = 800;
 const int win_height = 600;
 
 /* Demo program of basic use of OpenGL 4.3 with SDL2 */
+
+void cleanup() { // Free resources and exit
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(sdl_window);
+    SDL_Quit();
+}
 
 void printShaderLog(GLuint shader) {
     int len = 0;
@@ -48,7 +56,7 @@ bool checkOpenGLError() {
 }
 
 int init(const char* title, unsigned int win_flags) {
-    // Return 0 for success and -1 for failure
+    /* Return 0 for success and -1 for failure */
     if (SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "Failed to init SDL video, error: "
                   << SDL_GetError()
@@ -142,7 +150,7 @@ int main() {
 
     // Init, exit if it fails
     if (init("sdl2opengl", SDL_WINDOW_OPENGL) == -1) {
-        return -1;
+        return EXIT_FAILURE;
     }
 
     renderingProgram = createShaderProgram();
@@ -150,9 +158,9 @@ int main() {
     glBindVertexArray(vao[0]);
 
     glUseProgram(renderingProgram); // load shader program into gpu
-    glPointSize(30.0f);
-    glDrawArrays(GL_POINTS, 0, 1);
-
+    SDL_GL_SetSwapInterval(1); // enable vsync
+    float x = 0.0; // offset
+    int dir = 1; // direction (+1 or -1)
     bool isRunning = true;
     SDL_Event sdl_event;
     while (isRunning)
@@ -162,6 +170,7 @@ int main() {
             if (sdl_event.type == SDL_QUIT)
             {
                 isRunning = false;
+                break;
             }
             else if (sdl_event.type == SDL_KEYDOWN)
             {
@@ -172,15 +181,25 @@ int main() {
                     break;
                 }
             }
-
-            SDL_GL_SwapWindow(sdl_window);
         }
+        if (x > 1.0) {
+            dir = -1;
+        } else if (x < -1.0) {
+            dir = 1;
+        }
+        x += (dir * 0.01);
+        GLuint offsetLoc = glGetUniformLocation(renderingProgram, "offset"); // get ptr to "offset"
+        glProgramUniform1f(renderingProgram, offsetLoc, x); // send value in "x" to "offset"
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        SDL_GL_SwapWindow(sdl_window);
     }
 
-    // clean up
-    SDL_GL_DeleteContext(context);
-    SDL_DestroyWindow(sdl_window);
-    SDL_Quit();
-
-    return 0;
+    // clean up in a way that works even in a crash/sudden termination
+    const int atexit_result = std::atexit(cleanup);
+    if (atexit_result != 0) {
+        std::cerr << "atexit registration of cleanup failed!" << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
